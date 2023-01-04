@@ -1,13 +1,15 @@
 use hudsucker::{
     async_trait::async_trait,
     certificate_authority::RcgenAuthority,
-    hyper::{Body, Request, Response},
+    hyper::{body::HttpBody, Body, Request, Response},
     tokio_tungstenite::tungstenite::Message,
     *,
 };
 use rustls_pemfile as pemfile;
 use std::net::SocketAddr;
 use tracing::*;
+use bytes::BytesMut;
+use bytes::Bytes;
 
 async fn shutdown_signal() {
     tokio::signal::ctrl_c()
@@ -25,20 +27,23 @@ impl HttpHandler for LogHandler {
         _ctx: &HttpContext,
         req: Request<Body>,
     ) -> RequestOrResponse {
-        println!("{:?}", req);
+        //println!("{:?}", req);
         req.into()
     }
 
-    async fn handle_response(&mut self, _ctx: &HttpContext, res: Response<Body>) -> Response<Body> {
-        println!("{:?}", res);
-        res
+    async fn handle_response(&mut self, _ctx: &HttpContext, mut res: Response<Body>) -> Response<Body> {
+        let (parts, bod) = res.into_parts();
+        let bytes = hyper::body::to_bytes(bod).await.unwrap();
+        println!("{:?}", bytes);
+
+        Response::from_parts(parts, Body::from(bytes))
     }
 }
 
 #[async_trait]
 impl WebSocketHandler for LogHandler {
     async fn handle_message(&mut self, _ctx: &WebSocketContext, msg: Message) -> Option<Message> {
-        println!("{:?}", msg);
+        //println!("{:?}", msg);
         Some(msg)
     }
 }

@@ -32,10 +32,10 @@ impl HttpHandler for LogHandler {
     }
 
     async fn handle_response(&mut self, _ctx: &HttpContext, mut res: Response<Body>) -> Response<Body> {
+        println!("{:?}",res);
         let (parts, bod) = res.into_parts();
         let bytes = hyper::body::to_bytes(bod).await.unwrap();
-        println!("{:?}", bytes);
-
+        //println!("{:?}", bytes);
         Response::from_parts(parts, Body::from(bytes))
     }
 }
